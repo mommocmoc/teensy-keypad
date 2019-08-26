@@ -1,3 +1,9 @@
+//mode 변경용 
+bool buttonState = false;
+bool ledState = false;
+int buttonPin = 14;
+int led = 13;
+
 int pinNum = 8;
 int touchReading[8] = {0,0,0,0,0,0,0,0};
 int touchPin[8] = {22,19,18,17,16,15,1,0};
@@ -6,10 +12,15 @@ int keys[] = {KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8};
 
 void setup() {
   //For Debuging
-  Serial.begin(9600);
+  //Serial.begin(9600);
+  pinMode(led, OUTPUT);
+  pinMode(buttonPin, INPUT);
 }
 
 void loop() {
+  //Rocker
+  buttonState = digitalRead(buttonPin);
+  
   // Touchpin Set Up : 22,19,18,17,16,1,0 (터치핀 셋팅 : 22,19,18,17,16,1,0 순서대로 0~7번째 핀)
   for(int i = 0 ; i < pinNum ; i++){
     touchReading[i] = touchRead(touchPin[i]);
@@ -18,6 +29,8 @@ void loop() {
   //Touch Sensitivity. Lower Number => More Sensitive(터치민감도. 숫자가 낮을 수록 더 민감하게 작동한다.)
   int vel = 4000; 
 
+  if(buttonState){
+    ledState = false;
   for(int i = 0 ; i < pinNum ; i++){
     if(touchReading[i] > vel){
       
@@ -38,5 +51,11 @@ void loop() {
         isStarted[i] = !isStarted[i];
       }
   }
+  } else{
+    ledState = true;
+    //Synth Part Here
+    
+  }
+  digitalWrite(led, ledState);
   delay(5);
 }
