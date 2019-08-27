@@ -1,4 +1,29 @@
-//mode 변경용 
+#include <Audio.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <SD.h>
+#include <SerialFlash.h>
+
+#include "c4_samples.h"
+//#include "Flute_100kbyte_samples.h"
+// GUItool: begin automatically generated code
+AudioSynthWavetable      wavetable1;     //xy=150,341
+AudioMixer4              mixer1;         //xy=369,338
+AudioOutputAnalog        dac1;           //xy=547,339
+AudioConnection          patchCord1(wavetable1, 0, mixer1, 0);
+AudioConnection          patchCord2(mixer1, dac1);
+// GUItool: end automatically generated code
+
+
+
+//Freq from C4 to C5
+float freq[] = {523.25, 587.32, 659.25, 698.45, 783.99, 880.0, 987.76, 1046.5};
+float vol = 0.7;
+
+
+//mode indicator : 
+// led on = synth mode 
+// led off : keypad mode
 bool buttonState = false;
 bool ledState = false;
 int buttonPin = 14;
@@ -15,10 +40,15 @@ void setup() {
   //Serial.begin(9600);
   pinMode(led, OUTPUT);
   pinMode(buttonPin, INPUT);
+  AudioMemory(20);
+  wavetable1.setInstrument(c4);
+//  wavetable1.setInstrument(Flute_100kbyte);
+  wavetable1.amplitude(1);
+  mixer1.gain(0,vol);
 }
 
 void loop() {
-  //Rocker
+  //Rocker button state
   buttonState = digitalRead(buttonPin);
   
   // Touchpin Set Up : 22,19,18,17,16,1,0 (터치핀 셋팅 : 22,19,18,17,16,1,0 순서대로 0~7번째 핀)
@@ -31,6 +61,7 @@ void loop() {
 
   if(buttonState){
     ledState = false;
+    wavetable1.stop();
   for(int i = 0 ; i < pinNum ; i++){
     if(touchReading[i] > vel){
       
@@ -51,11 +82,34 @@ void loop() {
         isStarted[i] = !isStarted[i];
       }
   }
-  } else{
+  }else{
     ledState = true;
     //Synth Part Here
+    for(int i = 0 ; i < pinNum ; i++){
+    if(touchReading[i] > vel){
+      
+      isStarted[i] = !isStarted[i];
+      delay(5);
+
+      if(isStarted[i])
+      {
+        //play wave table
+        wavetable1.playFrequency(freq[i]);
+        wavetable1.amplitude(vol);
+        delay(300);
+        wavetable1.stop();
+      }
+      }else
+      {
+        //stop wave table
+        isStarted[i] = !isStarted[i];
+      }
+  }
+    
     
   }
+  wavetable1.amplitude(vol);
+  //wavetable1.setFrequency(freq[0]);
   digitalWrite(led, ledState);
   delay(5);
 }
