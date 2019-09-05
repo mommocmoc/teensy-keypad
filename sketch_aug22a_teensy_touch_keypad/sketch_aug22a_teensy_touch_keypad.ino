@@ -1,9 +1,12 @@
+//BUTTON
+#include <RBD_Button.h>
+
+//WaveTable
 #include <Audio.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
 #include <SerialFlash.h>
-
 #include "c4_samples.h"
 //#include "Flute_100kbyte_samples.h"
 // GUItool: begin automatically generated code
@@ -14,8 +17,6 @@ AudioConnection          patchCord1(wavetable1, 0, mixer1, 0);
 AudioConnection          patchCord2(mixer1, dac1);
 // GUItool: end automatically generated code
 
-
-
 //Freq from C4 to C5
 float freq[] = {523.25, 587.32, 659.25, 698.45, 783.99, 880.0, 987.76, 1046.5};
 float vol = 0.7;
@@ -24,14 +25,13 @@ float vol = 0.7;
 //mode indicator : 
 // led on = synth mode 
 // led off : keypad mode
-bool buttonState = false;
 bool ledState = false;
-int buttonPin = 14;
+RBD::Button button(0);
 int led = 13;
 
 int pinNum = 8;
 int touchReading[8] = {0,0,0,0,0,0,0,0};
-int touchPin[8] = {22,19,18,17,16,15,1,0};
+int touchPin[8] = {23,22,19,18,17,16,15,1};
 boolean isStarted[8] = {false, false, false, false, false, false, false, false};
 int keys[] = {KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8};
 
@@ -39,7 +39,6 @@ void setup() {
   //For Debuging
   //Serial.begin(9600);
   pinMode(led, OUTPUT);
-  pinMode(buttonPin, INPUT);
   AudioMemory(20);
   wavetable1.setInstrument(c4);
 //  wavetable1.setInstrument(Flute_100kbyte);
@@ -48,9 +47,6 @@ void setup() {
 }
 
 void loop() {
-  //Rocker button state
-  buttonState = digitalRead(buttonPin);
-  
   // Touchpin Set Up : 22,19,18,17,16,1,0 (터치핀 셋팅 : 22,19,18,17,16,1,0 순서대로 0~7번째 핀)
   for(int i = 0 ; i < pinNum ; i++){
     touchReading[i] = touchRead(touchPin[i]);
@@ -59,7 +55,7 @@ void loop() {
   //Touch Sensitivity. Lower Number => More Sensitive(터치민감도. 숫자가 낮을 수록 더 민감하게 작동한다.)
   int vel = 4000; 
 
-  if(buttonState){
+  if(button.isReleased()){
     ledState = false;
     wavetable1.stop();
   for(int i = 0 ; i < pinNum ; i++){
@@ -82,7 +78,7 @@ void loop() {
         isStarted[i] = !isStarted[i];
       }
   }
-  }else{
+  }else if(button.isPressed()){
     ledState = true;
     //Synth Part Here
     for(int i = 0 ; i < pinNum ; i++){
@@ -104,9 +100,7 @@ void loop() {
         //stop wave table
         isStarted[i] = !isStarted[i];
       }
-  }
-    
-    
+    } 
   }
   wavetable1.amplitude(vol);
   //wavetable1.setFrequency(freq[0]);
